@@ -16,12 +16,16 @@
       margin: 0;
       padding: 20px;
       text-align: center;
+      overflow: hidden; /* needed for flying fairies */
+      position: relative;
     }
 
     h1 {
       font-size: 1.5rem;
       margin-bottom: 1rem;
       color: #333;
+      z-index: 1;
+      position: relative;
     }
 
     #prompt {
@@ -35,36 +39,152 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 1;
+      position: relative;
     }
 
-    button {
-      padding: 15px 25px;
-      font-size: 1rem;
-      background-color: #007bff;
+    /* From Uiverse.io by adamgiebl */ 
+    .button {
+      -webkit-appearance: none;
+      appearance: none;
+      position: relative;
+      border-width: 0;
+      padding: 0 8px 12px;
+      min-width: 10em;
+      box-sizing: border-box;
+      background: transparent;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .button-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 0;
+      padding: 8px 16px;
+      transform: translateY(0);
+      text-align: center;
       color: #fff;
-      border: none;
-      border-radius: 10px;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-      margin: 5px;
+      text-shadow: 0 -1px rgba(0, 0, 0, .25);
+      transition-property: transform;
+      transition-duration: .2s;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
-    button:active {
-      transform: scale(0.98);
+    .button:active .button-top {
+      transform: translateY(6px);
     }
+
+    .button-top::after {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      border-radius: 4px;
+      width: 100%;
+      height: 100%;
+      box-sizing: content-box;
+      background-image: radial-gradient(#3dcd9e, #369d8d);
+      text-align: center;
+      color: #fff;
+      box-shadow: inset 0 0 0px 1px rgba(255, 255, 255, .2), 0 1px 2px 1px rgba(255, 255, 255, .2);
+      transition-property: border-radius, padding, width, transform;
+      transition-duration: .2s;
+    }
+
+    .button:active .button-top::after {
+      border-radius: 6px;
+      padding: 0 2px;
+    }
+
+    .button-bottom {
+      position: absolute;
+      z-index: -1;
+      bottom: 4px;
+      left: 4px;
+      border-radius: 8px / 16px 16px 8px 8px;
+      padding-top: 6px;
+      width: calc(100% - 8px);
+      height: calc(100% - 10px);
+      box-sizing: content-box;
+      background-color: #38a19d;
+      background-image: radial-gradient(4px 8px at 4px calc(100% - 8px), rgba(255, 255, 255, .25), transparent), 
+                        radial-gradient(4px 8px at calc(100% - 4px) calc(100% - 8px), rgba(255, 255, 255, .25), transparent),
+                        radial-gradient(16px at -4px 0, white, transparent),
+                        radial-gradient(16px at calc(100% + 4px) 0, white, transparent);
+      box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.5), inset 0 -1px 3px 3px rgba(0, 0, 0, .4);
+      transition-property: border-radius, padding-top;
+      transition-duration: .2s;
+    }
+
+    .button:active .button-bottom {
+      border-radius: 10px 10px 8px 8px / 8px;
+      padding-top: 0;
+    }
+
+    .button-base {
+      position: absolute;
+      z-index: -2;
+      top: 4px;
+      left: 0;
+      border-radius: 12px;
+      width: 100%;
+      height: calc(100% - 4px);
+      background-color: rgba(0, 0, 0, .15);
+      box-shadow: 0 1px 1px 0 black, inset 0 2px 2px rgba(0, 0, 0, .25);
+    }
+
+    /* Skip button colour */
+    .skip-button .button-top::after {
+      background-image: radial-gradient(#f39c12, #d35400);
+    }
+
+    .skip-button .button-bottom {
+      background-color: #e67e22;
+      background-image: radial-gradient(4px 8px at 4px calc(100% - 8px), rgba(255, 255, 255, .25), transparent), 
+                        radial-gradient(4px 8px at calc(100% - 4px) calc(100% - 8px), rgba(255, 255, 255, .25), transparent),
+                        radial-gradient(16px at -4px 0, white, transparent),
+                        radial-gradient(16px at calc(100% + 4px) 0, white, transparent);
+    }
+
   </style>
+  <link rel="stylesheet" href="fairy.css">
 </head>
 <body>
 
   <h1>Daily Prompt Generator</h1>
+
+  <div class="fairy">
+  <div class="wings"></div>
+  <div class="glow">
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+  </div>
+  </div>
+
   <div id="prompt">Press "Generate" to see today's prompt!</div>
-  <button id="generateBtn">Generate</button>
-  <button id="skipBtn" style="display:none;">Skip</button>
+
+  <button type="button" id="generateBtn" class="button">
+    <div class="button-top">Generate</div>
+    <div class="button-bottom"></div>
+    <div class="button-base"></div>
+  </button>
+
+  <button type="button" id="skipBtn" style="display:none;" class="button skip-button">
+    <div class="button-top">Skip</div>
+    <div class="button-bottom"></div>
+    <div class="button-base"></div>
+  </button>
 
   <script>
     let prompts = null;
     let currentMonth = null;
 
-    // Load prompts.json dynamically
     fetch('prompts.json')
       .then(response => {
         if (!response.ok) throw new Error("Could not load prompts.json");
@@ -87,7 +207,6 @@
     const skipBtn = document.getElementById('skipBtn');
     const promptDiv = document.getElementById('prompt');
 
-    // Generate today's prompt
     btn.addEventListener('click', () => {
       if (!prompts) {
         promptDiv.textContent = "Prompts are still loading...";
@@ -104,10 +223,9 @@
         promptDiv.textContent = "No prompt available for today!";
       }
 
-      skipBtn.style.display = "inline-block"; // Show skip button
+      skipBtn.style.display = "inline-block";
     });
 
-    // Skip current prompt and show a random prompt from the same month
     skipBtn.addEventListener('click', () => {
       if (!prompts || !currentMonth) return;
 
@@ -125,6 +243,8 @@
       promptDiv.textContent = monthPrompts[randomIndex];
     });
   </script>
+
+  <script src="fairy.js"></script>
 
 </body>
 </html>
