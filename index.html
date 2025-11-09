@@ -45,6 +45,7 @@
       border: none;
       border-radius: 10px;
       box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+      margin: 5px;
     }
 
     button:active {
@@ -57,10 +58,11 @@
   <h1>Daily Prompt Generator</h1>
   <div id="prompt">Press "Generate" to see today's prompt!</div>
   <button id="generateBtn">Generate</button>
-  <button id="skipBtn">Skip</button>
+  <button id="skipBtn" style="display:none;">Skip</button>
 
   <script>
     let prompts = null;
+    let currentMonth = null;
 
     // Load prompts.json dynamically
     fetch('prompts.json')
@@ -85,25 +87,7 @@
     const skipBtn = document.getElementById('skipBtn');
     const promptDiv = document.getElementById('prompt');
 
-    skipBtn.addEventListener('click', () => {
-      if (!prompts) {
-        promptDiv.textContent = "Prompts are still loading...";
-        return;
-      }
-      const start = new Date(2025, 0, 1);
-      const end = new Date();
-      const randomDate = Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-
-      const monthName = monthNames[randomDate.getMonth()];
-      const dayIndex = randomDate.getDate() - 1;
-
-      if(prompts[monthName] && prompts[monthName][dayIndex]){
-        promptDiv.textContent = prompts[monthName][dayIndex];
-      } else {
-        promptDiv.textContent = "No prompt available for today!";
-      }
-    });
-
+    // Generate today's prompt
     btn.addEventListener('click', () => {
       if (!prompts) {
         promptDiv.textContent = "Prompts are still loading...";
@@ -111,14 +95,34 @@
       }
 
       const today = new Date();
-      const monthName = monthNames[today.getMonth()];
-      const dayIndex = today.getDate() - 1; // JSON array index is day-1
+      currentMonth = monthNames[today.getMonth()];
+      const dayIndex = today.getDate() - 1;
 
-      if(prompts[monthName] && prompts[monthName][dayIndex]){
-        promptDiv.textContent = prompts[monthName][dayIndex];
+      if(prompts[currentMonth] && prompts[currentMonth][dayIndex]){
+        promptDiv.textContent = prompts[currentMonth][dayIndex];
       } else {
         promptDiv.textContent = "No prompt available for today!";
       }
+
+      skipBtn.style.display = "inline-block"; // Show skip button
+    });
+
+    // Skip current prompt and show a random prompt from the same month
+    skipBtn.addEventListener('click', () => {
+      if (!prompts || !currentMonth) return;
+
+      const monthPrompts = prompts[currentMonth];
+      if (!monthPrompts || monthPrompts.length === 0) {
+        promptDiv.textContent = "No prompts available for this month!";
+        return;
+      }
+
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * monthPrompts.length);
+      } while (monthPrompts[randomIndex] === promptDiv.textContent && monthPrompts.length > 1);
+
+      promptDiv.textContent = monthPrompts[randomIndex];
     });
   </script>
 
