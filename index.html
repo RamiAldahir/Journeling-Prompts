@@ -57,6 +57,7 @@
   <h1>Daily Prompt Generator</h1>
   <div id="prompt">Press "Generate" to see today's prompt!</div>
   <button id="generateBtn">Generate</button>
+  <button id="skipBtn">Skip</button>
 
   <script>
     let prompts = null;
@@ -81,7 +82,27 @@
     ];
 
     const btn = document.getElementById('generateBtn');
+    const skipBtn = document.getElementById('skipBtn');
     const promptDiv = document.getElementById('prompt');
+
+    skipBtn.addEventListener('click', () => {
+      if (!prompts) {
+        promptDiv.textContent = "Prompts are still loading...";
+        return;
+      }
+      const start = new Date(2025, 0, 1);
+      const end = new Date();
+      const randomDate = Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+
+      const monthName = monthNames[randomDate.getMonth()];
+      const dayIndex = randomDate.getDate() - 1;
+
+      if(prompts[monthName] && prompts[monthName][dayIndex]){
+        promptDiv.textContent = prompts[monthName][dayIndex];
+      } else {
+        promptDiv.textContent = "No prompt available for today!";
+      }
+    });
 
     btn.addEventListener('click', () => {
       if (!prompts) {
